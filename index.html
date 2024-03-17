@@ -181,12 +181,23 @@
         #loginForm input[type="submit"]:hover {
             background-color: #0056b3;
         }
+        #storageTracker {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: default;
+            z-index: 9999; /* Ensure the button is above other elements */
+        }
 
     </style>
-</head>
-
+    </head>
 <body>
     <h1>The FileNest</h1>
+    <div id="storageTracker">Storage: 0 MB / 10 MB</div>
     <button id="loginButton" class="button">Login</button>
     <div id="app" style="display: none;">
         <div>
@@ -225,6 +236,8 @@
             'Kanwal': 'password'
         };
 
+        let storageUsage = 0; // Track the user's storage usage
+
         document.getElementById('loginButton').addEventListener('click', () => {
             document.getElementById('loginModal').style.display = 'block';
         });
@@ -249,6 +262,7 @@
             const password = document.getElementById('password').value;
             if (users.hasOwnProperty(username) && users[username] === password) {
                 document.getElementById('app').style.display = 'block';
+                document.getElementById('storageTracker').style.display = 'block'; // Show storage tracker
                 modal.style.display = 'none';
                 document.getElementById('loginButton').textContent = 'Logout';
                 document.getElementById('loginButton').removeEventListener('click', handleLogin);
@@ -264,6 +278,7 @@
             document.getElementById('loginButton').removeEventListener('click', handleLogout);
             document.getElementById('loginButton').addEventListener('click', handleLogin);
             document.getElementById('app').style.display = 'none';
+            document.getElementById('storageTracker').style.display = 'none'; // Hide storage tracker
             document.getElementById('welcomeMessage').textContent = '';
         }
 
@@ -344,50 +359,75 @@
                 }
             });
         }
+        let files = JSON.parse(localStorage.getItem('files')) || [];
+
+        function saveFilesToStorage() {
+            localStorage.setItem('files', JSON.stringify(files));
+        }
 
         function displayFile(file) {
-            const fileList = document.getElementById('fileList');
-            const fileItem = document.createElement('div');
-            fileItem.className = 'fileItem';
+    const fileList = document.getElementById('fileList');
+    const fileItem = document.createElement('div');
+    fileItem.className = 'fileItem';
 
-            if (file.mimetype.includes('image')) {
-                const img = document.createElement('img');
-                img.src = file.url;
-                fileItem.appendChild(img);
-            }
+    if (file.mimetype.includes('image')) {
+        const img = document.createElement('img');
+        img.src = file.url;
+        fileItem.appendChild(img);
+    }
 
-            const fileName = document.createElement('p');
-            fileName.textContent = file.filename;
-            fileItem.appendChild(fileName);
+    const fileName = document.createElement('p');
+    fileName.textContent = file.filename;
+    fileItem.appendChild(fileName);
 
-            const replaceButton = document.createElement('button');
-            replaceButton.textContent = 'Replace';
-            replaceButton.addEventListener('click', () => {
-                replaceFile(fileItem, file);
-            });
-            fileItem.appendChild(replaceButton);
+    const replaceButton = document.createElement('button');
+    replaceButton.textContent = 'Replace';
+    replaceButton.addEventListener('click', () => {
+        replaceFile(fileItem, file);
+    });
+    fileItem.appendChild(replaceButton);
 
-            const deleteButton = document.createElement('button');
-            deleteButton.textContent = 'Delete';
-            deleteButton.addEventListener('click', () => {
-                deleteFile(fileItem, file);
-            });
-            fileItem.appendChild(deleteButton);
+    const deleteButton = document.createElement('button');
+    deleteButton.textContent = 'Delete';
+    deleteButton.addEventListener('click', () => {
+        deleteFile(fileItem, file);
+    });
+    fileItem.appendChild(deleteButton);
 
-            const moveButton = document.createElement('button');
-            moveButton.textContent = 'Move to Folder';
-            moveButton.addEventListener('click', () => {
-                moveFileToFolder(fileItem, file);
-            });
-            fileItem.appendChild(moveButton);
+    const moveButton = document.createElement('button');
+    moveButton.textContent = 'Move to Folder';
+    moveButton.addEventListener('click', () => {
+        moveFileToFolder(fileItem, file);
+    });
+    fileItem.appendChild(moveButton);
 
-            if (!folders['root']) {
-                folders['root'] = [];
-            }
-            folders['root'].push(file);
+    if (!folders['root']) {
+        folders['root'] = [];
+    }
+    folders['root'].push(file);
 
-            fileList.appendChild(fileItem);
-        }
+    if ((storageUsage + file.size) > (10 * 1024 * 1024)) {
+        alert('Cannot upload file. Storage limit exceeded.');
+        return;
+    }
+
+    fileList.appendChild(fileItem);
+    files.push(file);
+
+    // Save the files array to local storage
+    saveFilesToStorage();
+
+    // Update storage usage
+    storageUsage += file.size;
+    updateStorageCounter();
+
+    // Alert when reaching 80% of the storage limit
+    if ((storageUsage / (10 * 1024 * 1024)) >= 0.8) {
+        alert('Warning: You have reached 80% of your storage limit.');
+    }
+}
+
+
 
         function replaceFile(fileItem, file) {
             client.picker({
@@ -409,8 +449,13 @@
                 const index = folders['root'].indexOf(file);
                 if (index !== -1) {
                     folders['root'].splice(index, 1);
+                    saveFilesToStorage();
                 }
                 fileItem.remove(); // Remove the file from the file list
+
+                // Update storage usage
+                storageUsage -= file.size;
+                updateStorageCounter();
             }
         }
 
@@ -423,8 +468,22 @@
                 }
                 folders[folderName].push(file);
                 fileItem.remove(); // Remove the file from the file list
+                saveFilesToStorage();
+                // Update storage usage
+                updateStorageCounter();
             }
         }
+
+        function updateStorageCounter() {
+            const storageTracker = document.getElementById('storageTracker');
+            storageTracker.textContent = `Storage: ${(storageUsage / (1024 * 1024)).toFixed(2)} MB / 10 MB`;
+        }
+
+        function loadFilesFromStorage() {
+    files.forEach(file => {
+        displayFile(file);
+    });
+}
     </script>
 </body>
 
