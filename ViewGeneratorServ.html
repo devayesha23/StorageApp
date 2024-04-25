@@ -1,0 +1,233 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The FileNest</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa; /* Light grey background */
+            color: #333; /* Dark grey text color */
+            background-image: url('https://static.vecteezy.com/system/resources/previews/005/631/672/non_2x/cloud-computing-operating-system-concept-polygon-cloud-and-data-transmission-on-blue-background-wireless-file-upload-technology-download-secure-data-protection-system-business-and-technology-vector.jpg');
+            background-size: cover;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: white; /* Blue title */
+            font-size: 100px;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .button {
+            display: block;
+            margin: 10px auto;
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px; /* Rounded corners */
+            cursor: pointer;
+            transition: background-color 0.3s; /* Smooth color transition */
+            text-decoration: none;
+            width: 200px; /* Set width for buttons */
+        }
+
+        .button:hover {
+            background-color: #0056b3; /* Darker blue on hover */
+        }
+
+        .folderItem,
+        .fileItem {
+            background-color: white;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px; /* Rounded corners */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Soft shadow */
+            transition: background-color 0.3s; /* Smooth color transition */
+            cursor: pointer;
+        }
+
+        .folderItem:hover,
+        .fileItem:hover {
+            background-color: #f0f0f0; /* Light grey on hover */
+        }
+
+        .fileItem img {
+            max-width: 100%;
+            max-height: 100px;
+            display: block; /* Center the image */
+            margin: 0 auto;
+            border-radius: 5px; /* Rounded corners */
+        }
+
+        .fileItem p {
+            margin: 5px 0;
+            font-size: 14px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .fileItem button {
+            margin-top: 10px;
+            display: block;
+            background-color: #007bff; /* Green button */
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px; /* Rounded corners */
+            cursor: pointer;
+            transition: background-color 0.3s; /* Smooth color transition */
+        }
+
+        .fileItem button:hover {
+            background-color: #218838; /* Darker green on hover */
+        }
+
+        .fileItem button + button {
+            margin-top: 5px;
+        }
+
+        .backButton {
+            background-color: #6c757d; /* Grey button */
+        }
+
+        .backButton:hover {
+            background-color: #5a6268; /* Darker grey on hover */
+        }
+
+        .folderNameInput {
+            padding: 5px;
+            margin-top: 10px;
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 5px; /* Rounded corners */
+        }
+
+        /* Login Modal */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            padding-top: 60px; /* Place modal content at the top */
+        }
+
+        /* Modal Content */
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto; /* 5% from the top and centered */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; /* Could be more or less, depending on screen size */
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        /* Close Button */
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        #loginForm label {
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        #loginForm input[type="text"],
+        #loginForm input[type="password"],
+        #loginForm input[type="submit"] {
+            width: 25%;
+            padding: 10px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        #loginForm input[type="submit"] {
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            width: 30%;
+            margin: 10px auto;
+        }
+
+        #loginForm input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+        #storageTracker {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: default;
+            z-index: 9999; /* Ensure the button is above other elements */
+        }
+
+    </style>
+    </head>
+<body>
+    <h1>The FileNest</h1>
+    <div id="storageTracker">Storage: 0 MB / 10 MB</div>
+    <button id="loginButton" class="button">Login</button>
+    <div id="app" style="display: none;">
+        <div>
+            <a href="#" id="uploadButton" class="button">Select Files</a>
+            <a href="#" id="createFolderButton" class="button">Create Folder</a>
+        </div>
+        <div id="fileList"></div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Login</h2>
+            <form id="loginForm">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required><br>
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required><br>
+                <input type="submit" value="Login">
+            </form>
+        </div>
+    </div>
+
+    <script src="https://static.filestackapi.com/filestack-js/3.x.x/filestack.min.js"></script>
+    <script src="IdntyAccMgmtServ.js"></script>
+    <script src="StorageMgmtServ.js"></script>
+    <script src="UsageMntrServ.js"></script>
+    <script>
+        const apiKey = 'A18L3T2eWRemxYIGwGlZsz'; // Replace 'YOUR_API_KEY' with your actual Filestack API key
+        const client = filestack.init(apiKey);
+    </script>
+</body>
+
+</html>
